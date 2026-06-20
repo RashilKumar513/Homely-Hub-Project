@@ -58,14 +58,6 @@ Choose one of the options below depending on how the project is set up.
 
 Check `package.json` for exact scripts (start, dev, build, serve).
 
-## Project structure (example)
-- src/ or public/ — JavaScript, HTML, and assets
-- css/ or styles/ — stylesheet files
-- assets/ — images, icons, fonts
-- index.html — main entry page
-- README.md — this file
-
-Adjust paths above to match the actual repository layout.
 
 ## Development notes
 - Keep UI components modular — split JavaScript into clear modules or components.
@@ -77,10 +69,6 @@ Adjust paths above to match the actual repository layout.
 - Test responsive layout across screen sizes and devices.
 - Add unit tests (Jest) or end-to-end tests (Playwright, Cypress) when adding critical flows like bookings.
 
-## Deployment
-- For static sites: deploy to GitHub Pages, Netlify, Vercel, or any static hosting provider.
-- For Node-built apps: build the production bundle (npm run build) and host the resulting static files on the platform of your choice.
-
 ## Environment & configuration
 - If the app calls external APIs, keep secrets/config out of the repo and use environment variables or a config file ignored by git (e.g., `.env`, and add it to `.gitignore`).
 
@@ -90,16 +78,4 @@ Adjust paths above to match the actual repository layout.
 3. Commit your changes: `git commit -m "Add feature: ..."`
 4. Push and open a pull request
 
-Include clear commit messages and a short description in PRs explaining the change and how to test it.
-
-## License
-If you want the project to be open-source, add a LICENSE file (MIT is a common choice).
-
-## Contact
-Repository: https://github.com/RashilKumar513/Homely-Hub-Project
-
-If you'd like, I can:
-- Inspect the repository and tailor the Run/Build instructions to exact scripts present in package.json
-- Add a simple `package.json` and `npm` scripts (dev, start, build) if you want a standard developer workflow
-- Add badges (build, license) or a screenshot/quick-start section to the README
 
