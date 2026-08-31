@@ -79,11 +79,15 @@ export const sendEmailOTPAction = (email) => async (dispatch) => {
           boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
         },
       });
+      return data.demoOtp;
     } else {
       toast.success(`Verification OTP code sent to ${email}! 📧`);
+      return null;
     }
   } catch (error) {
-    dispatch(userActions.getError(error.response?.data?.message || "Failed to send Email OTP"));
+    const msg = error.response?.data?.message || "Failed to send Email OTP";
+    dispatch(userActions.getError(msg));
+    throw new Error(msg);
   }
 };
 

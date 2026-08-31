@@ -27,6 +27,7 @@ const Signup = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
+  const [serverOtp, setServerOtp] = useState('');
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
 
@@ -61,7 +62,7 @@ const Signup = () => {
   };
 
   // Step 1: Submit Form & Send Email OTP
-  const handleSendOtp = (e) => {
+  const handleSendOtp = async (e) => {
     if (e) e.preventDefault();
 
     const cleanName = name.trim();
@@ -95,9 +96,17 @@ const Signup = () => {
       return;
     }
 
-    dispatch(sendEmailOTPAction(cleanEmail));
-    setTimer(60);
-    setCanResend(false);
+    try {
+      const code = await dispatch(sendEmailOTPAction(cleanEmail));
+      if (code) {
+        setServerOtp(code);
+      }
+      setStep('otp');
+      setTimer(60);
+      setCanResend(false);
+    } catch (err) {
+      console.error('Send OTP Error:', err);
+    }
   };
 
   // Step 2: Verify Email OTP & Complete Registration
@@ -297,6 +306,29 @@ const Signup = () => {
                   style={{ textAlign: 'center', fontSize: '1.25rem', letterSpacing: '4px', fontWeight: '800' }}
                   required
                 />
+                {serverOtp && (
+                  <div style={{ textAlign: 'center', marginTop: '0.6rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => setOtp(serverOtp)}
+                      style={{
+                        background: 'rgba(255, 56, 92, 0.1)',
+                        border: '1px solid var(--accent-color)',
+                        borderRadius: '20px',
+                        color: 'var(--accent-color)',
+                        padding: '0.35rem 0.85rem',
+                        fontSize: '0.8rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      ✨ Auto-Fill Code ({serverOtp})
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', fontSize: '0.82rem' }}>

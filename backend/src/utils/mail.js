@@ -2,7 +2,7 @@ import Mailgen from 'mailgen';
 import nodemailer from 'nodemailer';
 
 /**
- * Send Real Email using Explicit SMTP Protocol Transporter
+ * Send Real Email using Gmail Service
  * @param {object} options - { email, subject, mailGenContent }
  */
 export const sendMail = async (options) => {
@@ -18,22 +18,16 @@ export const sendMail = async (options) => {
     const emailBody = mailGenerator.generate(options.mailGenContent);
     const emailText = mailGenerator.generatePlaintext(options.mailGenContent);
 
-    // Hardcode fallback to iikmuxivdhfqmqej if old password is provided in environment variables
     const smtpUser = (process.env.SMTP_USER || 'rashilromeo@gmail.com').trim();
     let rawPass = process.env.SMTP_PASS || 'iikmuxivdhfqmqej';
     if (rawPass.includes('phmaedtrfbphyddx') || !rawPass) {
       rawPass = 'iikmuxivdhfqmqej';
     }
-    const smtpPass = rawPass.trim();
+    const smtpPass = rawPass.replace(/\s+/g, '').trim();
 
-    const smtpHost = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
-    const smtpPort = Number(process.env.SMTP_PORT || 465);
-    const isSecure = smtpPort === 465;
-
+    // Standard Gmail Transporter
     const transporter = nodemailer.createTransport({
-      host: smtpHost,
-      port: smtpPort,
-      secure: isSecure,
+      service: 'gmail',
       auth: {
         user: smtpUser,
         pass: smtpPass,
@@ -51,12 +45,12 @@ export const sendMail = async (options) => {
       html: emailBody,
     };
 
-    console.log(`📡 Sending OTP via SMTP Protocol to ${options.email} [User: ${smtpUser}, Server: ${smtpHost}:${smtpPort}]...`);
+    console.log(`📡 Sending OTP via Gmail to ${options.email} [User: ${smtpUser}]...`);
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ SMTP Email Dispatched Successfully to ${options.email}. Message ID: ${info.messageId}`);
+    console.log(`✅ Gmail Email Dispatched Successfully to ${options.email}. Message ID: ${info.messageId}`);
     return info;
   } catch (error) {
-    console.error('❌ SMTP Protocol Transmission Error:', error.message);
+    console.error('❌ Gmail Protocol Transmission Error:', error.message);
     throw error;
   }
 };
