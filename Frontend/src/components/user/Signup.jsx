@@ -278,6 +278,9 @@ const Signup = () => {
                   We sent an official 6-digit OTP code to:
                 </span>
                 <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{email}</strong>
+                <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed rgba(255, 56, 92, 0.3)', fontSize: '0.8rem', color: 'var(--accent-color)', fontWeight: '700' }}>
+                  📩 Check your Gmail Inbox, <b>Spam</b>, or <b>Promotions</b> folder!
+                </div>
               </div>
 
               <div style={{ marginBottom: '1.25rem' }}>
