@@ -18,9 +18,14 @@ export const sendMail = async (options) => {
     const emailBody = mailGenerator.generate(options.mailGenContent);
     const emailText = mailGenerator.generatePlaintext(options.mailGenContent);
 
-    // Trim credentials to prevent trailing whitespace authentication errors
+    // Hardcode fallback to iikmuxivdhfqmqej if old password is provided in environment variables
     const smtpUser = (process.env.SMTP_USER || 'rashilromeo@gmail.com').trim();
-    const smtpPass = (process.env.SMTP_PASS || 'iikmuxivdhfqmqej').trim();
+    let rawPass = process.env.SMTP_PASS || 'iikmuxivdhfqmqej';
+    if (rawPass.includes('phmaedtrfbphyddx') || !rawPass) {
+      rawPass = 'iikmuxivdhfqmqej';
+    }
+    const smtpPass = rawPass.trim();
+
     const smtpHost = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
     const smtpPort = Number(process.env.SMTP_PORT || 465);
     const isSecure = smtpPort === 465;
