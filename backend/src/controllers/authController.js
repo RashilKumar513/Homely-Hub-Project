@@ -328,35 +328,36 @@ export const sendEmailOTP = async (req, res) => {
     user.otpExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save({ validateBeforeSave: false });
 
-    try {
-      await sendMail({
-        email: cleanEmail,
-        subject: `[Homely Hub Login]: Your 6-Digit Email OTP is ${generatedOtp}`,
-        mailGenContent: {
-          body: {
-            name: user.name || 'User',
-            intro: `Your login OTP code for Homely Hub is: ${generatedOtp}`,
-            action: {
-              instructions: 'Enter this 6-digit verification code in the app to log in:',
-              button: {
-                color: '#ff385c',
-                text: `OTP Code: ${generatedOtp}`,
-                link: 'https://homely-hub-project-lake.vercel.app/login',
-              },
-            },
-            outro: 'This code expires in 15 minutes. If you did not request this, please ignore.',
-          },
-        },
-      });
-      console.log(`✅ Gmail OTP email successfully sent to ${cleanEmail}`);
-    } catch (mailErr) {
-      console.error('❌ Gmail SMTP Error:', mailErr.message);
-    }
-
+    // 1. Send HTTP Response IMMEDIATELY (<50ms) so UI is instant and never hangs
     res.status(200).json({
       status: 'success',
       message: `Verification OTP code sent to ${cleanEmail}`,
       demoOtp: generatedOtp,
+    });
+
+    // 2. Fire & Forget real email dispatch in background
+    sendMail({
+      email: cleanEmail,
+      subject: `[Homely Hub Login]: Your 6-Digit Email OTP is ${generatedOtp}`,
+      mailGenContent: {
+        body: {
+          name: user.name || 'User',
+          intro: `Your login OTP code for Homely Hub is: ${generatedOtp}`,
+          action: {
+            instructions: 'Enter this 6-digit verification code in the app to log in:',
+            button: {
+              color: '#ff385c',
+              text: `OTP Code: ${generatedOtp}`,
+              link: 'https://homely-hub-project-lake.vercel.app/login',
+            },
+          },
+          outro: 'This code expires in 15 minutes. If you did not request this, please ignore.',
+        },
+      },
+    }).then(() => {
+      console.log(`✅ Background Gmail OTP email successfully sent to ${cleanEmail}`);
+    }).catch((mailErr) => {
+      console.error('❌ Background Gmail SMTP Error:', mailErr.message);
     });
   } catch (error) {
     res.status(400).json({ status: 'fail', message: error.message });
