@@ -150,7 +150,7 @@ const AdminDashboard = () => {
     const newRole = currentRole === 'admin' ? 'User' : 'Admin';
     if (!window.confirm(`Are you sure you want to change role for "${name}" to ${newRole}?`)) return;
     try {
-      await axiosInstance.patch(`/v1/rent/user/admin/users/${id}/role`);
+      await axiosInstance.patch(`/v1/rent/user/admin/user/${id}/toggle-role`);
       toast.success(`Role updated to ${newRole}`);
       fetchAdminData();
     } catch (error) {
@@ -161,7 +161,7 @@ const AdminDashboard = () => {
   const handleDeleteUser = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete user "${name}"?`)) return;
     try {
-      await axiosInstance.delete(`/v1/rent/user/admin/users/${id}`);
+      await axiosInstance.delete(`/v1/rent/user/admin/user/${id}`);
       toast.success(`User "${name}" removed`);
       fetchAdminData();
     } catch (error) {

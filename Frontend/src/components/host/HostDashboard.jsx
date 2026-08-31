@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, PlusSquare, Eye, Users, Calendar, DollarSign, MessageSquare, Send, CheckCircle2, Clock } from 'lucide-react';
+import { Home, PlusSquare, Eye, Users, Calendar, DollarSign, MessageSquare, Send, CheckCircle2, Clock, Trash2, UserCheck } from 'lucide-react';
 import '../../css/HostPortal.css';
 
 const HostDashboard = () => {
@@ -11,6 +11,7 @@ const HostDashboard = () => {
   const [activeTab, setActiveTab] = useState('properties');
   const [replyText, setReplyText] = useState({});
   const [sendingReplyId, setSendingReplyId] = useState(null);
+  const [deletingUserId, setDeletingUserId] = useState(null);
 
   const navigate = useNavigate();
 
@@ -46,7 +47,7 @@ const HostDashboard = () => {
 
     try {
       setSendingReplyId(inquiryId);
-      const res = await axios.patch(
+      await axios.patch(
         `/api/v1/rent/user/host/inquiries/${inquiryId}`,
         { replyMessage: text.trim() },
         { withCredentials: true }
@@ -55,7 +56,6 @@ const HostDashboard = () => {
       toast.success('Host reply sent & guest notified via email! 💬');
       setReplyText((prev) => ({ ...prev, [inquiryId]: '' }));
 
-      // Optimistically update local state for instant real-time UI feedback
       if (stats && stats.hostInquiries) {
         const updatedInquiries = stats.hostInquiries.map((inq) =>
           inq._id === inquiryId
@@ -71,6 +71,24 @@ const HostDashboard = () => {
       toast.error(err.response?.data?.message || 'Error sending host reply');
     } finally {
       setSendingReplyId(null);
+    }
+  };
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user account "${userName || 'User'}"?`)) {
+      return;
+    }
+
+    try {
+      setDeletingUserId(userId);
+      const res = await axios.delete(`/api/v1/rent/user/admin/user/${userId}`, { withCredentials: true });
+      toast.success(`User account "${userName || 'Account'}" deleted successfully! 🗑️`);
+      fetchHostStats(false);
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      toast.error(err.response?.data?.message || 'Failed to delete user account');
+    } finally {
+      setDeletingUserId(null);
     }
   };
 
@@ -93,7 +111,7 @@ const HostDashboard = () => {
               HOST PORTAL
             </h1>
             <p className="host-dashboard-subtitle" style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0 }}>
-              Host Management & Earnings Dashboard
+              Host Management, Earnings & User Moderation
             </p>
           </div>
         </div>
@@ -143,6 +161,9 @@ const HostDashboard = () => {
           </button>
           <button className={activeTab === 'inquiries' ? 'active' : ''} onClick={() => setActiveTab('inquiries')}>
             Guest Inquiries {pendingInquiriesCount > 0 ? `(${pendingInquiriesCount} Pending)` : `(${stats?.hostInquiries?.length || 0})`}
+          </button>
+          <button className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>
+            Platform Users ({stats?.allUsers?.length || 0})
           </button>
         </div>
 
@@ -263,6 +284,93 @@ const HostDashboard = () => {
                 <MessageSquare size={40} color="#94a3b8" style={{ marginBottom: '12px' }} />
                 <h3>No Inquiries Yet</h3>
                 <p>Guest questions regarding your staycation properties will appear here so you can respond directly.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: PLATFORM USERS & MODERATION */}
+        {activeTab === 'users' && (
+          <div className="host-table-container">
+            {stats?.allUsers?.length > 0 ? (
+              <table className="host-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Email Address</th>
+                    <th>Phone Number</th>
+                    <th>Account Role</th>
+                    <th>Joined Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats?.allUsers?.map((u) => (
+                    <tr key={u._id}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <img
+                            src={u.avatar?.url || 'https://i.pravatar.cc/150?img=3'}
+                            alt={u.name}
+                            style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                          <div>
+                            <strong style={{ display: 'block', color: 'var(--text-primary)' }}>{u.name || 'Guest User'}</strong>
+                            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>ID: #{u._id.slice(-6).toUpperCase()}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{u.email}</td>
+                      <td>{u.phoneNumber && u.phoneNumber !== '0000000000' ? `+91 ${u.phoneNumber}` : 'N/A'}</td>
+                      <td>
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            textTransform: 'uppercase',
+                            background: u.role === 'admin' ? 'rgba(59, 130, 246, 0.15)' : u.role === 'host' ? 'rgba(255, 56, 92, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                            color: u.role === 'admin' ? '#3b82f6' : u.role === 'host' ? '#ff385c' : '#10b981',
+                          }}
+                        >
+                          {u.role}
+                        </span>
+                      </td>
+                      <td>{new Date(u.createdAt).toLocaleDateString()}</td>
+                      <td>
+                        {u.role === 'admin' ? (
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>Protected Admin</span>
+                        ) : (
+                          <button
+                            onClick={() => handleDeleteUser(u._id, u.name)}
+                            disabled={deletingUserId === u._id}
+                            style={{
+                              padding: '6px 12px',
+                              borderRadius: '10px',
+                              background: '#ef4444',
+                              color: 'white',
+                              border: 'none',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            <Trash2 size={14} /> {deletingUserId === u._id ? 'Deleting...' : 'Delete User'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div style={{ background: 'white', padding: '40px', borderRadius: '16px', textAlign: 'center', color: '#64748b' }}>
+                <Users size={40} color="#94a3b8" style={{ marginBottom: '12px' }} />
+                <h3>No Registered Users Found</h3>
               </div>
             )}
           </div>

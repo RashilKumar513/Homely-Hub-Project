@@ -8,6 +8,9 @@ import PropertyListing from "./components/propertyListing/PropertyListing";
 
 import Login from "./components/user/Login";
 import Signup from "./components/user/Signup";
+import ForgotPassword from "./components/user/ForgotPassword";
+import ResetPassword from "./components/user/ResetPassword";
+import UpdatePassword from "./components/user/UpdatePassword";
 import HostLogin from "./components/host/HostLogin";
 import HostDashboard from "./components/host/HostDashboard";
 import AdminLogin from "./components/admin/AdminLogin";
@@ -16,7 +19,7 @@ import AdminDashboard from "./components/admin/AdminDashboard";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
 import { userActions } from "./store/User/user-slice";
-import { currentUser } from "./store/User/user-action";
+import { currentUser, checkSessionSilent } from "./store/User/user-action";
 import { fetchWishlist } from "./store/Wishlist/wishlist-action";
 import Profile from "./components/user/Profile";
 import EditProfile from "./components/user/EditProfile";
@@ -40,9 +43,14 @@ function App() {
   }, [dispatch]);
 
   useEffect(() => {
+    let interval;
     if (isAuthenticated) {
       dispatch(fetchWishlist());
+      interval = setInterval(() => {
+        dispatch(checkSessionSilent());
+      }, 4000); // 4-SECOND SILENT BACKGROUND DELETED ACCOUNT SYNC (ZERO FLICKER)
     }
+    return () => clearInterval(interval);
   }, [dispatch, isAuthenticated]);
 
   useEffect(() => {
@@ -64,8 +72,16 @@ function App() {
               <Route path="login" element={<Login />} />
               <Route path="user/login" element={<Login />} />
               <Route path="signup" element={<Signup />} />
+              <Route path="forgot-password" element={<ForgotPassword />} />
+              <Route path="forgotpassword" element={<ForgotPassword />} />
+              <Route path="reset-password/:token" element={<ResetPassword />} />
+              <Route path="resetPassword/:token" element={<ResetPassword />} />
+              <Route path="user/resetPassword/:token" element={<ResetPassword />} />
               <Route path="profile" element={<Profile />} />
               <Route path="editprofile" element={user ? <EditProfile /> : <Navigate to="/login" />} />
+              <Route path="user/updatepassword" element={user ? <UpdatePassword /> : <Navigate to="/login" />} />
+              <Route path="user/updatePassword" element={user ? <UpdatePassword /> : <Navigate to="/login" />} />
+              <Route path="updatepassword" element={user ? <UpdatePassword /> : <Navigate to="/login" />} />
               <Route path="user/wishlist" element={<Wishlist />} />
 
               {/* 🏡 HOST Auth Routes & Dashboard */}

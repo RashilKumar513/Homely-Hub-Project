@@ -55,6 +55,10 @@ router.post('/admin-login', adminLogin);
 router.get('/logout', logout);
 router.post('/inquiry', createInquiry);
 
+// Password Reset Routes (Public Access)
+router.post('/forgotPassword', forgotPassword);
+router.patch('/resetPassword/:token', resetPassword);
+
 // Email OTP Verification
 router.post('/send-email-otp', sendEmailOTP);
 router.post('/verify-email-otp', verifyEmailOTP);
@@ -65,8 +69,6 @@ router.use(protect);
 router.get('/me', check);
 router.patch('/updateMe', updateMe);
 router.patch('/updateMyPassword', updatePassword);
-router.post('/forgotPassword', forgotPassword);
-router.patch('/resetPassword/:token', resetPassword);
 
 // User Inquiries, Receipts & Cancellations
 router.get('/my-inquiries', getMyInquiries);
@@ -98,7 +100,10 @@ router.patch('/host/inquiries/:id', resolveInquiryAdmin);
 router.get('/admin/stats', getAdminStats);
 router.get('/admin/audit-logs', getAdminAuditLogs);
 router.delete('/admin/user/:id', deleteUserAdmin);
+router.delete('/admin/users/:id', deleteUserAdmin);
 router.patch('/admin/user/:id/toggle-role', toggleUserRoleAdmin);
+router.patch('/admin/user/:id/role', toggleUserRoleAdmin);
+router.patch('/admin/users/:id/role', toggleUserRoleAdmin);
 
 // Admin Inquiries
 router.get('/admin/inquiries', getAdminInquiries);

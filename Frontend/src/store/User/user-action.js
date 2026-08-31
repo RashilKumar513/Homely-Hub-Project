@@ -8,6 +8,8 @@ export const portalLoginAction = (credentials) => async (dispatch) => {
     dispatch(userActions.getLoginRequest());
     const { data } = await axiosInstance.post("/v1/rent/user/portal-login", credentials);
     dispatch(userActions.getLoginDetails(data.user));
+    dispatch(fetchWishlist());
+
     if (data.user?.role === 'host') {
       toast.success("Welcome to Host Portal! 🏡");
     } else if (data.user?.role === 'admin') {
@@ -15,8 +17,11 @@ export const portalLoginAction = (credentials) => async (dispatch) => {
     } else {
       toast.success("Logged in successfully 🎉");
     }
+    return data.user;
   } catch (error) {
-    dispatch(userActions.getError(error.response?.data?.message || "Invalid Credentials. Please check password."));
+    const msg = error.response?.data?.message || "Invalid Credentials. Please check password.";
+    dispatch(userActions.getError(msg));
+    throw new Error(msg);
   }
 };
 
@@ -26,20 +31,29 @@ export const getSignup = (user) => async (dispatch) => {
     dispatch(userActions.getSignupRequest());
     const { data } = await axiosInstance.post("/v1/rent/user/signup", user);
     dispatch(userActions.getCurrentUser(data.user));
+    dispatch(fetchWishlist());
     toast.success("Account created successfully! 🎉");
+    return data.user;
   } catch (error) {
-    dispatch(userActions.getError(error.response?.data?.message || "Failed to signup"));
+    const msg = error.response?.data?.message || "Failed to signup";
+    dispatch(userActions.getError(msg));
+    throw new Error(msg);
   }
 };
 
-// Legacy User Login
+// User Login
 export const getLogin = (user) => async (dispatch) => {
   try {
     dispatch(userActions.getLoginRequest());
     const { data } = await axiosInstance.post("/v1/rent/user/login", user);
     dispatch(userActions.getLoginDetails(data.user));
+    dispatch(fetchWishlist());
+    toast.success(`Welcome back, ${data.user?.name || 'User'}! 🎉`);
+    return data.user;
   } catch (error) {
-    dispatch(userActions.getError(error.response?.data?.message || "Failed to login"));
+    const msg = error.response?.data?.message || "Failed to login. Please check email & password.";
+    dispatch(userActions.getError(msg));
+    throw new Error(msg);
   }
 };
 
@@ -139,13 +153,41 @@ export const adminLoginAction = (credentials) => async (dispatch) => {
   }
 };
 
+export const checkSessionSilent = () => async (dispatch) => {
+  try {
+    const { data } = await axiosInstance.get("/v1/rent/user/me");
+    if (data.user) {
+      dispatch(userActions.getCurrentUser(data.user));
+    }
+  } catch (error) {
+    const errMsg = error.response?.data?.message || "";
+    if (error.response?.data?.accountDeleted || error.response?.status === 401 || errMsg.includes("no longer exists")) {
+      dispatch(userActions.getLogout(null));
+      toast.error("Your account has been deleted. Returning to home page...", { id: "deleted-account-toast" });
+      if (window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
+    }
+  }
+};
+
 export const currentUser = () => async (dispatch) => {
   try {
     dispatch(userActions.getCurrentUserRequest());
     const { data } = await axiosInstance.get("/v1/rent/user/me");
     dispatch(userActions.getCurrentUser(data.user));
   } catch (error) {
-    dispatch(userActions.getError(error.response?.data?.message || ""));
+    const errMsg = error.response?.data?.message || "";
+    if (error.response?.data?.accountDeleted || errMsg.includes("no longer exists")) {
+      dispatch(userActions.getLogout(null));
+      toast.error("Your account has been deleted. Returning to home page...");
+      if (window.location.pathname !== "/") {
+        window.location.href = "/";
+      }
+    } else {
+      // Guest user not logged in: set unauthenticated state cleanly without error toasts or re-render loops
+      dispatch(userActions.getLogout(null));
+    }
   }
 };
 
