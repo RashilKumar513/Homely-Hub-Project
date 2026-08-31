@@ -328,28 +328,30 @@ export const sendEmailOTP = async (req, res) => {
     user.otpExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save({ validateBeforeSave: false });
 
-    // Trigger SMTP email dispatch asynchronously so HTTP response is instant (<150ms)
-    sendMail({
-      email: cleanEmail,
-      subject: `[Homely Hub Login]: Your 6-Digit Email OTP is ${generatedOtp}`,
-      mailGenContent: {
-        body: {
-          name: user.name || 'User',
-          intro: `Your login OTP code for Homely Hub is: ${generatedOtp}`,
-          action: {
-            instructions: 'Enter this 6-digit verification code in the app to log in:',
-            button: {
-              color: '#ff385c',
-              text: `OTP Code: ${generatedOtp}`,
-              link: 'https://homely-hub-project-lake.vercel.app/login',
+    try {
+      await sendMail({
+        email: cleanEmail,
+        subject: `[Homely Hub Login]: Your 6-Digit Email OTP is ${generatedOtp}`,
+        mailGenContent: {
+          body: {
+            name: user.name || 'User',
+            intro: `Your login OTP code for Homely Hub is: ${generatedOtp}`,
+            action: {
+              instructions: 'Enter this 6-digit verification code in the app to log in:',
+              button: {
+                color: '#ff385c',
+                text: `OTP Code: ${generatedOtp}`,
+                link: 'https://homely-hub-project-lake.vercel.app/login',
+              },
             },
+            outro: 'This code expires in 15 minutes. If you did not request this, please ignore.',
           },
-          outro: 'This code expires in 15 minutes. If you did not request this, please ignore.',
         },
-      },
-    }).catch((mailErr) => {
-      console.error('Asynchronous email dispatch error:', mailErr.message);
-    });
+      });
+      console.log(`✅ Gmail OTP email successfully sent to ${cleanEmail}`);
+    } catch (mailErr) {
+      console.error('❌ Gmail SMTP Error:', mailErr.message);
+    }
 
     res.status(200).json({
       status: 'success',

@@ -18,8 +18,10 @@ export const sendMail = async (options) => {
     const emailBody = mailGenerator.generate(options.mailGenContent);
     const emailText = mailGenerator.generatePlaintext(options.mailGenContent);
 
-    // Default to Gmail SMTP (smtp.gmail.com:465) unless explicitly overridden
-    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+    // Trim credentials to prevent trailing whitespace authentication errors
+    const smtpUser = (process.env.SMTP_USER || 'rashilromeo@gmail.com').trim();
+    const smtpPass = (process.env.SMTP_PASS || 'phmaedtrfbphyddx').trim();
+    const smtpHost = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
     const smtpPort = Number(process.env.SMTP_PORT || 465);
     const isSecure = smtpPort === 465;
 
@@ -28,8 +30,8 @@ export const sendMail = async (options) => {
       port: smtpPort,
       secure: isSecure,
       auth: {
-        user: process.env.SMTP_USER || 'rashilromeo@gmail.com',
-        pass: process.env.SMTP_PASS || 'phmaedtrfbphyddx',
+        user: smtpUser,
+        pass: smtpPass,
       },
       tls: {
         rejectUnauthorized: false,
@@ -37,14 +39,14 @@ export const sendMail = async (options) => {
     });
 
     const mailOptions = {
-      from: `"Homely Hub Stays" <${process.env.SMTP_USER || 'rashilromeo@gmail.com'}>`,
+      from: `"Homely Hub Stays" <${smtpUser}>`,
       to: options.email,
       subject: options.subject,
       text: emailText,
       html: emailBody,
     };
 
-    console.log(`📡 Sending OTP via SMTP Protocol to ${options.email} [Server: ${smtpHost}:${smtpPort}]...`);
+    console.log(`📡 Sending OTP via SMTP Protocol to ${options.email} [User: ${smtpUser}, Server: ${smtpHost}:${smtpPort}]...`);
     const info = await transporter.sendMail(mailOptions);
     console.log(`✅ SMTP Email Dispatched Successfully to ${options.email}. Message ID: ${info.messageId}`);
     return info;
