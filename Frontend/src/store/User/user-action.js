@@ -25,17 +25,17 @@ export const portalLoginAction = (credentials) => async (dispatch) => {
   }
 };
 
-// Legacy User Signup
+// User Signup
 export const getSignup = (user) => async (dispatch) => {
   try {
     dispatch(userActions.getSignupRequest());
     const { data } = await axiosInstance.post("/v1/rent/user/signup", user);
-    dispatch(userActions.getCurrentUser(data.user));
+    dispatch(userActions.getLoginDetails(data.user));
     dispatch(fetchWishlist());
-    toast.success("Account created successfully! 🎉");
+    toast.success(`Welcome to Homely Hub, ${data.user?.name || 'User'}! 🎉`);
     return data.user;
   } catch (error) {
-    const msg = error.response?.data?.message || "Failed to signup";
+    const msg = error.response?.data?.message || "Failed to create account. Please check your details.";
     dispatch(userActions.getError(msg));
     throw new Error(msg);
   }

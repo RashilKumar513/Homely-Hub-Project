@@ -2,18 +2,16 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { getSignup, sendEmailOTPAction, verifyEmailOTPAction } from '../../store/User/user-action';
+import { getSignup } from '../../store/User/user-action';
 import { userActions } from '../../store/User/user-slice';
 import LoadingSpinner from '../LoadingSpinner';
-import { User, Mail, Smartphone, Lock, Eye, EyeOff, CheckCircle2, ArrowRight, ShieldCheck, RefreshCw, UserPlus } from 'lucide-react';
+import { User, Mail, Smartphone, Lock, Eye, EyeOff, UserPlus, ArrowRight } from 'lucide-react';
 import '../../css/Login.css';
 
 const Signup = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { isAuthenticated, errors, loading, otpSent } = useSelector((state) => state.user);
-
-  const [step, setStep] = useState('details'); // 'details' or 'otp'
+  const { isAuthenticated, errors, loading, user } = useSelector((state) => state.user);
 
   // Registration Form State
   const [formData, setFormData] = useState({
@@ -26,43 +24,24 @@ const Signup = () => {
   const { name, email, phoneNumber, password, passwordConfirm } = formData;
 
   const [showPassword, setShowPassword] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [serverOtp, setServerOtp] = useState('');
-  const [timer, setTimer] = useState(60);
-  const [canResend, setCanResend] = useState(false);
-
-  useEffect(() => {
-    let interval;
-    if (otpSent && timer > 0) {
-      interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
-    } else if (timer === 0) {
-      setCanResend(true);
-    }
-    return () => clearInterval(interval);
-  }, [otpSent, timer]);
-
-  useEffect(() => {
-    if (otpSent && step === 'details') {
-      setStep('otp');
-    }
-  }, [otpSent, step]);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (errors) {
       toast.error(errors);
       dispatch(userActions.clearErrors());
-    } else if (isAuthenticated) {
-      toast.success('Registration successful! Welcome to Homely Hub 🎉');
+    } else if (isAuthenticated && user) {
+      toast.success(`Welcome to Homely Hub, ${user.name || 'User'}! 🎉`);
       navigate('/');
     }
-  }, [isAuthenticated, errors, navigate, dispatch]);
+  }, [isAuthenticated, user, errors, navigate, dispatch]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Step 1: Submit Form & Send Email OTP
-  const handleSendOtp = async (e) => {
+  // Direct Registration Submit Handler
+  const handleRegisterSubmit = async (e) => {
     if (e) e.preventDefault();
 
     const cleanName = name.trim();
@@ -97,45 +76,25 @@ const Signup = () => {
     }
 
     try {
-      const code = await dispatch(sendEmailOTPAction(cleanEmail));
-      if (code) {
-        setServerOtp(code);
-      }
-      setStep('otp');
-      setTimer(60);
-      setCanResend(false);
-    } catch (err) {
-      console.error('Send OTP Error:', err);
-    }
-  };
-
-  // Step 2: Verify Email OTP & Complete Registration
-  const handleVerifyAndRegister = async (e) => {
-    e.preventDefault();
-
-    if (!otp || otp.length < 6) {
-      toast.error('Please enter the complete 6-digit OTP code sent to your email');
-      return;
-    }
-
-    try {
-      const cleanEmail = email.trim().toLowerCase();
-      dispatch(getSignup({
-        name: name.trim(),
+      const registeredUser = await dispatch(getSignup({
+        name: cleanName,
         email: cleanEmail,
-        phoneNumber: phoneNumber.replace(/\D/g, ''),
-        password: password.trim(),
-        passwordConfirm: passwordConfirm.trim(),
-        otp: otp.trim(),
+        phoneNumber: cleanPhone,
+        password: cleanPassword,
+        passwordConfirm: cleanConfirm,
       }));
+
+      if (registeredUser) {
+        navigate('/');
+      }
     } catch (err) {
-      toast.error('Registration failed. Please check your OTP code.');
+      console.error('Registration error:', err);
     }
   };
 
   return (
     <div className="login-card-container" style={{ padding: '40px 20px' }}>
-      <div className="login-card-box" style={{ maxWidth: '520px', borderRadius: '24px', boxShadow: 'var(--shadow-lg)' }}>
+      <div className="login-card-box" style={{ maxWidth: '500px', borderRadius: '24px', boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ padding: '2.25rem 2rem' }}>
           {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
@@ -146,9 +105,7 @@ const Signup = () => {
               Create Account
             </h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-              {step === 'details'
-                ? 'Fill in your details below to receive your Email verification OTP'
-                : `Enter the 6-digit OTP code sent to ${email}`}
+              Register directly with your email & password
             </p>
           </div>
 
@@ -158,15 +115,15 @@ const Signup = () => {
             </div>
           )}
 
-          {/* STEP 1: REGISTRATION DETAILS FORM */}
-          {!loading && step === 'details' && (
-            <form onSubmit={handleSendOtp}>
+          {!loading && (
+            <form onSubmit={handleRegisterSubmit}>
               {/* Full Name / Username */}
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '1.1rem' }}>
                 <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.4rem', display: 'block' }}>
                   Full Name / Username
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="login-input-wrapper">
+                  <User size={18} color="#94a3b8" className="login-left-icon" />
                   <input
                     type="text"
                     name="name"
@@ -174,19 +131,18 @@ const Signup = () => {
                     value={name}
                     onChange={handleChange}
                     className="login-input-field"
-                    style={{ paddingLeft: '40px' }}
                     required
                   />
-                  <User size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 </div>
               </div>
 
               {/* Email Address */}
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '1.1rem' }}>
                 <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.4rem', display: 'block' }}>
                   Email Address
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="login-input-wrapper">
+                  <Mail size={18} color="#94a3b8" className="login-left-icon" />
                   <input
                     type="email"
                     name="email"
@@ -194,19 +150,18 @@ const Signup = () => {
                     value={email}
                     onChange={handleChange}
                     className="login-input-field"
-                    style={{ paddingLeft: '40px' }}
                     required
                   />
-                  <Mail size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 </div>
               </div>
 
               {/* Phone Number */}
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '1.1rem' }}>
                 <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.4rem', display: 'block' }}>
                   Mobile Phone Number
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="login-input-wrapper">
+                  <Smartphone size={18} color="#94a3b8" className="login-left-icon" />
                   <input
                     type="tel"
                     name="phoneNumber"
@@ -215,34 +170,32 @@ const Signup = () => {
                     value={phoneNumber}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value.replace(/\D/g, '') })}
                     className="login-input-field"
-                    style={{ paddingLeft: '40px' }}
                     required
                   />
-                  <Smartphone size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                 </div>
               </div>
 
               {/* Password */}
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '1.1rem' }}>
                 <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.4rem', display: 'block' }}>
                   Password
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="login-input-wrapper">
+                  <Lock size={18} color="#94a3b8" className="login-left-icon" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name="password"
-                    placeholder="Create account password (min 6 chars)"
+                    placeholder="Create password (min 6 chars)"
                     value={password}
                     onChange={handleChange}
-                    className="login-input-field"
-                    style={{ paddingLeft: '40px', paddingRight: '42px' }}
+                    className="login-input-field has-right-icon"
                     required
                   />
-                  <Lock size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
+                    className="login-right-btn"
+                    title={showPassword ? 'Hide Password' : 'Show Password'}
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
@@ -254,121 +207,35 @@ const Signup = () => {
                 <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.4rem', display: 'block' }}>
                   Confirm Password
                 </label>
-                <div style={{ position: 'relative' }}>
+                <div className="login-input-wrapper">
+                  <Lock size={18} color="#94a3b8" className="login-left-icon" />
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     name="passwordConfirm"
-                    placeholder="Re-enter account password"
+                    placeholder="Re-enter password"
                     value={passwordConfirm}
                     onChange={handleChange}
-                    className="login-input-field"
-                    style={{ paddingLeft: '40px' }}
+                    className="login-input-field has-right-icon"
                     required
                   />
-                  <Lock size={18} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="login-right-btn"
+                    title={showConfirmPassword ? 'Hide Password' : 'Show Password'}
+                  >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
 
               <button
                 type="submit"
+                onClick={handleRegisterSubmit}
                 className="login-action-btn"
                 style={{ background: 'var(--accent-color)', color: '#ffffff' }}
               >
-                Send Verification OTP <ArrowRight size={18} />
-              </button>
-            </form>
-          )}
-
-          {/* STEP 2: EMAIL OTP VERIFICATION FORM */}
-          {!loading && step === 'otp' && (
-            <form onSubmit={handleVerifyAndRegister}>
-              <div style={{ background: 'rgba(255, 56, 92, 0.08)', border: '1px solid rgba(255, 56, 92, 0.25)', borderRadius: '16px', padding: '1rem', marginBottom: '1.25rem', textAlign: 'center' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.2rem' }}>
-                  We sent an official 6-digit OTP code to:
-                </span>
-                <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{email}</strong>
-                <div style={{ marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px dashed rgba(255, 56, 92, 0.3)', fontSize: '0.82rem', color: 'var(--accent-color)', fontWeight: '700' }}>
-                  📩 Check your Gmail Inbox / Spam folder (or view top-right OTP notification toast)!
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '0.4rem', display: 'block' }}>
-                  Enter 6-Digit Email Verification Code
-                </label>
-                <input
-                  type="text"
-                  maxLength="6"
-                  placeholder="e.g. 123456"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  className="login-input-field"
-                  style={{ textAlign: 'center', fontSize: '1.25rem', letterSpacing: '4px', fontWeight: '800' }}
-                  required
-                />
-                {serverOtp && (
-                  <div style={{ textAlign: 'center', marginTop: '0.6rem' }}>
-                    <button
-                      type="button"
-                      onClick={() => setOtp(serverOtp)}
-                      style={{
-                        background: 'rgba(255, 56, 92, 0.1)',
-                        border: '1px solid var(--accent-color)',
-                        borderRadius: '20px',
-                        color: 'var(--accent-color)',
-                        padding: '0.35rem 0.85rem',
-                        fontSize: '0.8rem',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.35rem',
-                      }}
-                    >
-                      ✨ Auto-Fill Code ({serverOtp})
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', fontSize: '0.82rem' }}>
-                <span style={{ color: 'var(--text-muted)' }}>
-                  {timer > 0 ? `Resend OTP code in ${timer}s` : 'OTP code expired'}
-                </span>
-                <button
-                  type="button"
-                  disabled={!canResend}
-                  onClick={handleSendOtp}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: canResend ? 'var(--accent-color)' : 'var(--text-muted)',
-                    fontWeight: '700',
-                    cursor: canResend ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.25rem',
-                  }}
-                >
-                  <RefreshCw size={14} /> Resend OTP
-                </button>
-              </div>
-
-              <button
-                type="submit"
-                className="login-action-btn"
-                style={{ background: 'var(--accent-color)', color: '#ffffff' }}
-              >
-                <CheckCircle2 size={18} /> Verify & Complete Registration
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setStep('details')}
-                className="btn btn-link w-100 mt-2"
-                style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', textDecoration: 'none' }}
-              >
-                ← Edit Registration Details
+                Create Account <ArrowRight size={18} />
               </button>
             </form>
           )}

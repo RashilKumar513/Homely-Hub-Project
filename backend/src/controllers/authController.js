@@ -50,40 +50,33 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-// 1. PUBLIC USER SIGNUP (Plain text password, role: 'user')
+// 1. PUBLIC USER SIGNUP (Direct registration with Name, Email, Phone, Password)
 export const signup = async (req, res) => {
   try {
     const cleanEmail = req.body.email ? req.body.email.trim().toLowerCase() : '';
     const cleanPassword = req.body.password ? req.body.password.trim() : '';
+    const cleanName = req.body.name ? req.body.name.trim() : 'User';
+    const cleanPhone = req.body.phoneNumber ? req.body.phoneNumber.trim() : '0000000000';
 
     if (!cleanEmail || !cleanPassword) {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    let newUser = await User.findOne({ email: cleanEmail }).select('+otp');
-    
-    if (req.body.otp) {
-      const enteredOtp = req.body.otp.trim();
-      const isValidOtp = (newUser?.otp && newUser.otp === enteredOtp) || enteredOtp === '123456' || enteredOtp === '999999';
-      if (!isValidOtp) {
-        return res.status(400).json({ message: 'Invalid OTP code! Please check your email and try again.' });
-      }
-    }
+    let user = await User.findOne({ email: cleanEmail });
 
-    if (newUser) {
-      newUser.name = req.body.name ? req.body.name.trim() : newUser.name || 'Guest User';
-      newUser.phoneNumber = req.body.phoneNumber || newUser.phoneNumber || '0000000000';
-      newUser.password = cleanPassword;
-      newUser.passwordConfirm = req.body.passwordConfirm;
-      newUser.isEmailVerified = true;
-      newUser.otp = undefined;
-      newUser.otpExpires = undefined;
-      await newUser.save({ validateBeforeSave: false });
+    if (user) {
+      user.name = cleanName;
+      user.phoneNumber = cleanPhone;
+      user.password = cleanPassword;
+      user.passwordConfirm = req.body.passwordConfirm;
+      user.isEmailVerified = true;
+      user.role = user.role || 'user';
+      await user.save({ validateBeforeSave: false });
     } else {
-      newUser = await User.create({
-        name: req.body.name ? req.body.name.trim() : 'Guest User',
+      user = await User.create({
+        name: cleanName,
         email: cleanEmail,
-        phoneNumber: req.body.phoneNumber || '0000000000',
+        phoneNumber: cleanPhone,
         password: cleanPassword,
         passwordConfirm: req.body.passwordConfirm,
         avatar: { url: req.body.avatar || defaultAvatarUrl },
@@ -92,31 +85,7 @@ export const signup = async (req, res) => {
       });
     }
 
-    try {
-      await sendMail({
-        email: newUser.email,
-        subject: '[Homely Hub]: Welcome to Luxury Staycations! 🏡',
-        mailGenContent: {
-          body: {
-            name: newUser.name || 'Valued Guest',
-            intro: 'Welcome to Homely Hub! Your account has been registered successfully.',
-            action: {
-              instructions: 'Click below to start exploring accommodations:',
-              button: {
-                color: '#ff385c',
-                text: 'Explore Luxury Stays',
-                link: 'http://localhost:5173',
-              },
-            },
-            outro: 'If you have any questions, feel free to reach out to support@homelyhub.com.',
-          },
-        },
-      });
-    } catch (mailErr) {
-      console.error('Welcome email dispatch error:', mailErr.message);
-    }
-
-    createSendToken(newUser, 201, res);
+    createSendToken(user, 201, res);
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
