@@ -11,16 +11,16 @@ export const sendMail = async (options) => {
       theme: 'default',
       product: {
         name: 'Homely Hub Stays',
-        link: 'http://localhost:5173',
+        link: 'https://homely-hub-project-lake.vercel.app',
       },
     });
 
     const emailBody = mailGenerator.generate(options.mailGenContent);
     const emailText = mailGenerator.generatePlaintext(options.mailGenContent);
 
-    // Explicit SMTP Protocol Connection Transporter
-    const smtpHost = process.env.SMTP_HOST || process.env.MAILTRAP_SMTP_HOST || 'sandbox.smtp.mailtrap.io';
-    const smtpPort = Number(process.env.SMTP_PORT || process.env.MAILTRAP_SMTP_PORT || 2525);
+    // Default to Gmail SMTP (smtp.gmail.com:465) unless explicitly overridden
+    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const smtpPort = Number(process.env.SMTP_PORT || 465);
     const isSecure = smtpPort === 465;
 
     const transporter = nodemailer.createTransport({
@@ -28,8 +28,8 @@ export const sendMail = async (options) => {
       port: smtpPort,
       secure: isSecure,
       auth: {
-        user: process.env.SMTP_USER || process.env.MAILTRAP_SMTP_USER || '9626b0267becee',
-        pass: process.env.SMTP_PASS || process.env.MAILTRAP_SMTP_PASS || 'ba00f853facf71',
+        user: process.env.SMTP_USER || 'rashilromeo@gmail.com',
+        pass: process.env.SMTP_PASS || 'phmaedtrfbphyddx',
       },
       tls: {
         rejectUnauthorized: false,
@@ -37,7 +37,7 @@ export const sendMail = async (options) => {
     });
 
     const mailOptions = {
-      from: `"Homely Hub Stays" <${process.env.SMTP_USER || 'hello@homelyhub.in'}>`,
+      from: `"Homely Hub Stays" <${process.env.SMTP_USER || 'rashilromeo@gmail.com'}>`,
       to: options.email,
       subject: options.subject,
       text: emailText,
