@@ -1,5 +1,5 @@
 import { Property } from '../Models/PropertyModel.js';
-import APIFeatures from '../utils/ApiFeatures.js';
+import APIFeatures from '../utils/APIFeatures.js';
 import imagekit from '../utils/ImagekitIO.js';
 
 export const createProperty = async (req, res) => {
