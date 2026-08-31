@@ -164,7 +164,7 @@ export const verifyPayment = async (req, res) => {
                 button: {
                   color: '#10b981',
                   text: 'View Confirmed Stay & GST Voucher',
-                  link: `http://localhost:5173/user/mybookings/${booking._id}`,
+                  link: `https://homely-hub-project-lake.vercel.app/user/mybookings/${booking._id}`,
                 },
               },
               outro: `Invoice GSTIN: 33AAAAH1234F1Z5 | Receipt ID: #${receiptId}. Present this voucher at check-in. Thank you for choosing Homely Hub!`,
@@ -204,7 +204,7 @@ export const verifyPayment = async (req, res) => {
                 button: {
                   color: '#ff385c',
                   text: 'Open Admin Dashboard',
-                  link: 'http://localhost:5173/admin/dashboard',
+                  link: 'https://homely-hub-project-lake.vercel.app/admin/dashboard',
                 },
               },
               outro: `Receipt ID: #${receiptId}. The booking and revenue metrics have been updated in MongoDB & Admin Portal.`,
@@ -238,7 +238,7 @@ export const verifyPayment = async (req, res) => {
                 button: {
                   color: '#dc2626',
                   text: 'Retry Payment Now',
-                  link: `http://localhost:5173/payment/${bookingDetails?.propertyId || ''}`,
+                  link: `https://homely-hub-project-lake.vercel.app/payment/${bookingDetails?.propertyId || ''}`,
                 },
               },
               outro: 'If you need assistance, contact support@homelyhub.com.',
