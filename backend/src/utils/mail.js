@@ -20,7 +20,7 @@ export const sendMail = async (options) => {
 
     // Trim credentials to prevent trailing whitespace authentication errors
     const smtpUser = (process.env.SMTP_USER || 'rashilromeo@gmail.com').trim();
-    const smtpPass = (process.env.SMTP_PASS || 'phmaedtrfbphyddx').trim();
+    const smtpPass = (process.env.SMTP_PASS || 'iikmuxivdhfqmqej').trim();
     const smtpHost = (process.env.SMTP_HOST || 'smtp.gmail.com').trim();
     const smtpPort = Number(process.env.SMTP_PORT || 465);
     const isSecure = smtpPort === 465;
