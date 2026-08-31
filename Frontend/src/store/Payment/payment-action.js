@@ -8,10 +8,12 @@ export const initiateCheckoutSession = (paymentData) => async (dispatch)=>{
         const response = await axiosInstance.post("/v1/rent/user/booking/create-order", paymentData)
         if (!response)throw new Error("Failed to initiate checkout session");
         dispatch(paymentActions.getCheckoutSuccess(response.data));
+        return response.data;
     }
     
     catch(error){
-         dispatch(paymentActions.getError(error.response?.data?.message || error.message))
+         dispatch(paymentActions.getError(error.response?.data?.message || error.message));
+         throw error;
     }
 }
 

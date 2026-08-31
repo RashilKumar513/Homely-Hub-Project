@@ -6,7 +6,7 @@ export const getAllProperties =() => async(dispatch,getState)=>{
 try{
 dispatch(propertyAction.getRequest())
 const{searchParams} = getState().properties;
-const response = await axiosInstance.get(`/v1/rent/listing`, {params : {...searchParams}})
+const response = await axiosInstance.get(`/v1/rent/listing`, {params : { limit: 100, ...searchParams }})
 if(!response){
     throw new Error("Could not fetch any properties")
 }

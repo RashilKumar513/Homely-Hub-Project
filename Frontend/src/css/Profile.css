@@ -17,35 +17,27 @@
 }
 
 .user-info h4,
-h2 {
+.user-info h2 {
   font-weight: 800;
-  margin-top: 2rem;
-  text-shadow: 2px 2px white;
-  letter-spacing: 2px;
+  margin-top: 1rem;
+  letter-spacing: 0.02em;
 }
 
 .user-info p {
   font-size: 1.1rem;
 }
 
-.btn {
+.profile-btn {
   background-color: #0e8b53;
   border-color: #0e8b53;
   color: white;
   box-shadow: 2px 2px 10px rgb(183, 170, 170);
   border-radius: 15px;
-  border-color: #8b8683;
   width: 16rem;
 }
 
 .buttons {
   display: flex;
-}
-.btn:hover {
-  background-color: rgba(177, 221, 184, 0.63);
-  border-color: rgb(2, 58, 11);
-  color: rgb(2, 58, 11);
-  font-weight: bold;
 }
 
 .update-btn {
@@ -54,7 +46,6 @@ h2 {
   color: white;
   box-shadow: 2px 2px 10px rgb(183, 170, 170);
   border-radius: 15px;
-  border-color: #8b8683;
   width: 20rem;
   margin-left: 20%;
   font-size: larger;

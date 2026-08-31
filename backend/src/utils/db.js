@@ -1,9 +1,14 @@
-import a11a from 'mongoose';
+import mongoose from 'mongoose';
+
 const connectDB = async () => {
-    try {
-        await a11a['connect'](process['env']['MONGO_URI']), console['log']('Mongodb\x20connected...');
-    } catch (a) {
-        console['error']('Mongodv\x20connection\x20failed', a), process['exit'](0x1);
-    }
+  try {
+    const mongoUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/testing';
+    await mongoose.connect(mongoUri);
+    console.log(`MongoDB connected successfully to ${mongoUri}...`);
+  } catch (error) {
+    console.error('MongoDB connection failed:', error.message);
+    process.exit(1);
+  }
 };
+
 export default connectDB;

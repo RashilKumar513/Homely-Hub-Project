@@ -1,81 +1,89 @@
-import a6a from 'mongoose';
-import a6b from 'validator';
-import a6c from 'bcrypt';
-import a6d from 'crypto';
-const userSchema = new a6a['Schema']({
-    'name': {
-        'type': String,
-        'required': [
-            !![],
-            'Please\x20enter\x20your\x20name'
-        ]
+import mongoose from 'mongoose';
+import validator from 'validator';
+import crypto from 'crypto';
+
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, 'Please enter your name'],
     },
-    'email': {
-        'type': String,
-        'required': [
-            !![],
-            'Please\x20enter\x20your\x20email'
-        ],
-        'unique': !![],
-        'lowercase': !![],
-        'validate': [
-            a6b['isEmail'],
-            'Please\x20enter\x20a\x20valid\x20email\x20address'
-        ]
+    email: {
+      type: String,
+      required: [true, 'Please enter your email'],
+      unique: true,
+      lowercase: true,
+      validate: [validator.isEmail, 'Please enter a valid email address'],
     },
-    'password': {
-        'type': String,
-        'required': [
-            !![],
-            'Please\x20enter\x20your\x20password'
-        ],
-        'minlength': [
-            0x6,
-            'Your\x20password\x20must\x20be\x20longer\x20than\x206\x20characters'
-        ],
-        'select': ![]
+    password: {
+      type: String,
+      required: [true, 'Please enter your password'],
+      minlength: [4, 'Your password must be at least 4 characters'],
+      select: false,
     },
-    'passwordConfirm': {
-        'type': String,
-        'require': [
-            !![],
-            'Plesae\x20confim\x20your\x20Password'
-        ],
-        'validate': function (a) {
-            return a === this['password'];
-        },
-        'message': 'Password\x20are\x20not\x20same!'
+    passwordConfirm: {
+      type: String,
+      required: [false, 'Please confirm your password'],
     },
-    'phoneNumber': {
-        'type': String,
-        'required': !![],
-        'unique': !![]
+    phoneNumber: {
+      type: String,
+      required: true,
     },
-    'avatar': {
-        'url': { 'type': String },
-        'public_id': { 'type': String }
+    avatar: {
+      url: { type: String },
+      public_id: { type: String },
     },
-    'passwordChangedAt': { 'type': Date },
-    'passwordResetToken': String,
-    'passwordResetExpires': Date
-}, { 'timestamps': !![] });
-userSchema['pre']('save', async function (a) {
-    if (!this['isModified']('password'))
-        return a();
-    this['password'] = await a6c['hash'](this['password'], 0xc), this['passwordConfirm'] = undefined, a();
-}), userSchema['methods']['correctPassword'] = async function (a, b) {
-    return await a6c['compare'](a, b);
-}, userSchema['methods']['changedPasswordAfter'] = function (a) {
-    if (this['passwordChangedAt']) {
-        const b = parseInt(this['passwordChangedAt']['getTime']() / 0x3e8, 0xa);
-        return a < b;
-    }
-    return ![];
-}, userSchema['methods']['createPasswordResetToken'] = function () {
-    const a = a6d['randomBytes'](0x20)['toString']('hex');
-    return this['passwordResetToken'] = a6d['createHash']('sha256')['update'](a)['digest']('hex'), this['passwordResetExpires'] = Date['now']() + 0xa * 0x3c * 0x3e8, a;
+    wishlist: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Property',
+      },
+    ],
+    role: {
+      type: String,
+      enum: ['user', 'host', 'admin'],
+      default: 'user',
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
+    otp: {
+      type: String,
+      select: false,
+    },
+    otpExpires: Date,
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
+  },
+  { timestamps: true }
+);
+
+// Direct Plain Text Comparison (No Hashing)
+userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
+  if (!candidatePassword || !userPassword) return false;
+  return candidatePassword.trim() === userPassword.trim();
 };
-const User = a6a['model']('User', userSchema);
-export {
-    User
+
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+    return JWTTimestamp < changedTimestamp;
+  }
+  return false;
 };
+
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  return resetToken;
+};
+
+const User = mongoose.model('User', userSchema);
+export { User };

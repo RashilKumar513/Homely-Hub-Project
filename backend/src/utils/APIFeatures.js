@@ -1,56 +1,103 @@
 class APIFeatures {
-    constructor(a, b) {
-        this['query'] = a, this['queryString'] = b;
+  constructor(query, queryString) {
+    this.query = query;
+    this.queryString = queryString;
+  }
+
+  filter() {
+    const queryObj = { ...this.queryString };
+    const filterConditions = {};
+
+    if (queryObj.minPrice && queryObj.maxPrice) {
+      if (queryObj.maxPrice.includes('>')) {
+        filterConditions.price = { $gte: Number(queryObj.minPrice) };
+      } else {
+        filterConditions.price = {
+          $gte: Number(queryObj.minPrice),
+          $lte: Number(queryObj.maxPrice),
+        };
+      }
+    } else if (queryObj.minPrice) {
+      filterConditions.price = { $gte: Number(queryObj.minPrice) };
+    } else if (queryObj.maxPrice && !queryObj.maxPrice.includes('>')) {
+      filterConditions.price = { $lte: Number(queryObj.maxPrice) };
     }
-    ['filter']() {
-        let a = {}, b = { ...this['queryString'] };
-        b['minPrice'] && b['maxPrice'] && (b['maxPrice']['includes']('>') ? a['price'] = { '$gte': b['minPrice'] } : a['price'] = {
-            '$gte': b['minPrice'],
-            '$lte': b['maxPrice']
-        });
-        if (b['propertyType']) {
-            let c = b['propertyType']['split'](',')['map'](d => d['trim']());
-            a['propertyType'] = { '$in': c };
-        }
-        b['roomType'] && (a['roomType'] = b['roomType']);
-        if (b['amenities']) {
-            const d = Array['isArray'](b['amenities']) ? b['amenities'] : [b['amenities']];
-            a['amenities.name'] = { '$all': d };
-        }
-        return this['query'] = this['query']['find'](a), this;
+
+    if (queryObj.propertyType) {
+      const types = queryObj.propertyType.split(',').map((t) => t.trim());
+      filterConditions.propertyType = { $in: types };
     }
-    ['search']() {
-        let a = {}, b = { ...this['queryString'] };
-        return a = b['city'] ? {
-            '$or': [
-                { 'address.city': b['city']['toLowerCase']()['replaceAll']('\x20', '') },
-                { 'address.state': b['city']['toLowerCase']()['replaceAll']('\x20', '') },
-                { 'address.area': b['city']['toLowerCase']()['replaceAll']('\x20', '') }
-            ]
-        } : {}, b['guests'] && (a['maximumGuest'] = { '$gte': b['guests'] }, b['guests']), b['dateIn'] && b['dateOut'] && (a['$and'] = [{
-                'currentBookings': {
-                    '$not': {
-                        '$elemMatch': {
-                            '$or': [
-                                {
-                                    'fromDate': { '$lt': b['dateOut'] },
-                                    'toDate': { '$gt': b['dateIn'] }
-                                },
-                                {
-                                    'fromDate': { '$lt': b['dateIn'] },
-                                    'toDate': { '$gt': b['dateIn'] }
-                                }
-                            ]
-                        }
-                    }
-                }
-            }]), this['query'] = this['query']['find'](a), this;
+
+    if (queryObj.roomType && queryObj.roomType !== 'Anytype') {
+      filterConditions.roomType = queryObj.roomType;
     }
-    ['paginate']() {
-        let a = this['queryString']['page'] * 0x1 || 0x1, b = this['queryString']['limit'] * 0x1 || 0xc, c = (a - 0x1) * b;
-        return this['query'] = this['query']['skip'](c)['limit'](b), this;
+
+    if (queryObj.amenities) {
+      const amenities = Array.isArray(queryObj.amenities)
+        ? queryObj.amenities
+        : [queryObj.amenities];
+      filterConditions['amenities.name'] = { $all: amenities };
     }
+
+    this.query = this.query.find(filterConditions);
+    return this;
+  }
+
+  search() {
+    const queryObj = { ...this.queryString };
+    const searchConditions = {};
+
+    if (queryObj.city) {
+      const cleanCity = queryObj.city.toLowerCase().replace(/\s+/g, '');
+      const cityRegex = new RegExp(cleanCity, 'i');
+      searchConditions['$or'] = [
+        { 'address.city': cityRegex },
+        { 'address.state': cityRegex },
+        { 'address.area': cityRegex },
+        { propertyName: cityRegex },
+      ];
+    }
+
+    if (queryObj.guests) {
+      searchConditions.maximumGuest = { $gte: Number(queryObj.guests) };
+    }
+
+    if (queryObj.dateIn && queryObj.dateOut) {
+      searchConditions['$and'] = [
+        {
+          currentBookings: {
+            $not: {
+              $elemMatch: {
+                $or: [
+                  {
+                    fromDate: { $lt: queryObj.dateOut },
+                    toDate: { $gt: queryObj.dateIn },
+                  },
+                  {
+                    fromDate: { $lt: queryObj.dateIn },
+                    toDate: { $gt: queryObj.dateIn },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      ];
+    }
+
+    this.query = this.query.find(searchConditions);
+    return this;
+  }
+
+  paginate() {
+    const page = this.queryString.page * 1 || 1;
+    const limit = this.queryString.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+
+    this.query = this.query.skip(skip).limit(limit);
+    return this;
+  }
 }
-export {
-    APIFeatures
-};
+
+export default APIFeatures;
+export { APIFeatures };

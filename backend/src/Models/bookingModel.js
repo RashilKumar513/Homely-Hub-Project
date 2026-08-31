@@ -1,48 +1,51 @@
-import a4a from 'mongoose';
-const bookingSchema = new a4a['Schema']({
-    'property': {
-        'type': a4a['Schema']['ObjectId'],
-        'ref': 'Property',
-        'required': [
-            !![],
-            'Booking\x20must\x20belong\x20to\x20a\x20Property!'
-        ]
+import mongoose from 'mongoose';
+
+const bookingSchema = new mongoose.Schema(
+  {
+    property: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Property',
+      required: [true, 'Booking must belong to a Property!'],
     },
-    'user': {
-        'type': a4a['Schema']['ObjectId'],
-        'ref': 'User',
-        'required': [
-            !![],
-            'Booking\x20must\x20belong\x20to\x20a\x20User!'
-        ]
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'Booking must belong to a User!'],
     },
-    'price': {
-        'type': Number,
-        'required': [
-            !![],
-            'Booking\x20must\x20have\x20a\x20price.'
-        ]
+    price: {
+      type: Number,
+      required: [true, 'Booking must have a price.'],
     },
-    'createdAt': {
-        'type': Date,
-        'default': Date['now']()
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
-    'paid': {
-        'type': Boolean,
-        'default': !![]
+    paid: {
+      type: Boolean,
+      default: true,
     },
-    'fromDate': { 'type': Date },
-    'toDate': { 'type': Date },
-    'guests': { 'type': Number },
-    'numberOfnights': { 'type': Number }
-}, { 'timestamps': !![] });
-bookingSchema['pre'](/^find/, function (a) {
-    this['populate']('user')['populate']({
-        'path': 'property',
-        'select': 'maximumGuest\x20location\x20images\x20propertyName\x20address'
-    }), a();
+    paymentMethod: {
+      type: String,
+      default: 'Razorpay Gateway',
+    },
+    paymentId: {
+      type: String,
+    },
+    fromDate: { type: Date },
+    toDate: { type: Date },
+    guests: { type: Number },
+    numberOfnights: { type: Number },
+  },
+  { timestamps: true }
+);
+
+bookingSchema.pre(/^find/, function (next) {
+  this.populate('user').populate({
+    path: 'property',
+    select: 'maximumGuest location images propertyName address price ratings',
+  });
+  next();
 });
-const Booking = a4a['model']('Booking', bookingSchema);
-export {
-    Booking
-};
+
+const Booking = mongoose.model('Booking', bookingSchema);
+export { Booking };

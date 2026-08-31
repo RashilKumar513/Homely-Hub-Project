@@ -1,68 +1,82 @@
-import React, { useState } from 'react'
-import Modal from "./Modal"
+import React, { useState } from 'react';
+import Modal from "./Modal";
+import { Images } from 'lucide-react';
 
-const PropertyImg = ({images}) => {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+const fallbackImg = 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80';
 
-    const handleShowAllPhotos = () =>{
-        setIsModalOpen(true)
-    }
+const PropertyImg = ({ images = [] }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleCloseModal =()=>{
-        setIsModalOpen(false)
-    }
+  const handleShowAllPhotos = () => {
+    setIsModalOpen(true);
+  };
 
-    // //Static Images
-    // const images = [
-    //     {url: "/assets/property2.webp"},
-    //     {url:"/assets/property3.webp"},
-    //     {url:"/assets/property4.webp"},
-    //     {url:"/assets/property5.webp"},
-    //     {url:"/assets/property3.webp"},
-    //     {url:"/assets/property3.webp"},
-    //     {url:"/assets/property3.webp"}
-    // ]
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
+  const imgList = Array.isArray(images) && images.length > 0 ? images : [{ url: fallbackImg }];
+
+  const getImgUrl = (idx) => {
+    if (imgList[idx] && imgList[idx].url) return imgList[idx].url;
+    return imgList[0]?.url || fallbackImg;
+  };
 
   return (
     <>
-    <div className='property-img-container'>
-        <div className='img-item'>
-            <img src={images[0].url} 
-            className='images' 
-            style={{borderTopLeftRadius:"10px", borderBottomLeftRadius:"10px"}}
-            alt='property-1'
-            />
-
+      <div className="property-gallery-bento">
+        <div className="bento-main">
+          <img
+            src={getImgUrl(0)}
+            alt="Property Main"
+            onClick={handleShowAllPhotos}
+            onError={(e) => { e.target.src = fallbackImg; }}
+          />
         </div>
 
-        <div>
-            <img className='images' src={images[1].url} alt='property'/>
+        <div className="bento-secondary">
+          <img
+            src={getImgUrl(1)}
+            alt="Property 2"
+            onClick={handleShowAllPhotos}
+            onError={(e) => { e.target.src = fallbackImg; }}
+          />
         </div>
-         <div>
-            <img className='images' src={images[2].url} alt='property'/>
-        </div>
-         <div>
-            <img className='images' src={images[3].url} alt='property'/>
-        </div>
-      
-      <div >
-        <img className='images' src={images[5].url} 
-        style={{borderBottomRightRadius:"10px"}}
-        />
-        <button className='similar-photos' onClick={handleShowAllPhotos}>
-            <span className='material-symbols-outlined'>photo_library</span>
 
-        </button>
+        <div className="bento-secondary">
+          <img
+            src={getImgUrl(2)}
+            alt="Property 3"
+            onClick={handleShowAllPhotos}
+            onError={(e) => { e.target.src = fallbackImg; }}
+          />
+        </div>
 
+        <div className="bento-secondary">
+          <img
+            src={getImgUrl(3)}
+            alt="Property 4"
+            onClick={handleShowAllPhotos}
+            onError={(e) => { e.target.src = fallbackImg; }}
+          />
+        </div>
+
+        <div className="bento-secondary bento-last">
+          <img
+            src={getImgUrl(4)}
+            alt="Property 5"
+            onClick={handleShowAllPhotos}
+            onError={(e) => { e.target.src = fallbackImg; }}
+          />
+          <button className="show-photos-btn" onClick={handleShowAllPhotos}>
+            <Images size={16} /> Show all {imgList.length} photos
+          </button>
+        </div>
       </div>
-    </div>
 
-    <div className='similar-photos-container'></div>
-    {isModalOpen && <Modal images={images} onClose={handleCloseModal}/>}
+      {isModalOpen && <Modal images={imgList} onClose={handleCloseModal} />}
     </>
-  )
-}
+  );
+};
 
-export default PropertyImg
- 
+export default PropertyImg;

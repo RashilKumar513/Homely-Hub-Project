@@ -1,47 +1,83 @@
-/* body {
-  background-image: url("../../public/assets/template.jpeg");
-  background-size: cover;
-  backdrop-filter: blur(5px);
-} */
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap");
-
-.wrapper {
+.login-card-container {
+  min-height: 80vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  margin-top: 4rem;
-  font-weight: 700;
-  font-family: "Poppins", sans-serif;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.login-card-box {
   width: 100%;
+  max-width: 460px;
+  background: var(--bg-card);
+  border-radius: 24px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
-.wrapper form {
-  padding: 2.5rem 3rem;
-  padding-bottom: 4rem;
-  box-shadow: 1px 1px 5px#353736;
-  margin-bottom: 8rem;
+.login-tabs-header {
+  display: flex !important;
+  flex-direction: row !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  background: var(--bg-primary) !important;
+  height: 54px !important;
+  min-height: 54px !important;
+  max-height: 54px !important;
 }
 
-.wrapper form h1 {
-  text-align: center;
+.login-tab-btn {
+  flex: 1 !important;
+  height: 54px !important;
+  min-height: 54px !important;
+  max-height: 54px !important;
+  padding: 0 0.5rem !important;
+  border: none !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.4rem !important;
+  cursor: pointer !important;
+  align-self: center !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  transition: all 0.2s ease !important;
 }
 
-.wrapper form .loginbutton {
-  background-color: #0e8b53;
-  border-color: #8b8683;
-  color: white;
-  margin-top: 2.5rem;
-  box-shadow: 2px 2px 10px rgb(183, 170, 170);
-  border-radius: 15px;
-}
-.wrapper form .loginbutton:hover {
-  background-color: rgba(1, 38, 7, 0.177);
-  border-color: rgb(2, 58, 11);
-  color: rgb(2, 58, 11);
-  font-weight: bold;
+.login-input-field {
+  width: 100% !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--border-color) !important;
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  padding: 0 0.85rem !important;
+  font-size: 0.95rem !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-.wrapper form a {
-  font-size: 0.9rem;
-  color: grey;
+.login-action-btn {
+  width: 100% !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  border-radius: 30px !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  align-self: center !important;
+  flex-shrink: 0 !important;
+  margin-top: 0.5rem !important;
+  text-decoration: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }

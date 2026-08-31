@@ -1,10 +1,23 @@
-import a8a from 'express';
+import express from 'express';
 import {
-    getProperties,
-    getProperty
+  getProperties,
+  getProperty,
+  createPropertyReview,
+  updateProperty,
+  deleteProperty,
 } from '../controllers/propertyController.js';
-const propertyRouter = a8a['Router']();
-propertyRouter['route']('/')['get'](getProperties), propertyRouter['route']('/:id')['get'](getProperty);
-export {
-    propertyRouter
-};
+import { checkDateAvailability } from '../controllers/holdController.js';
+import { protect } from '../controllers/authController.js';
+
+const propertyRouter = express.Router();
+
+propertyRouter.get('/check-availability', checkDateAvailability);
+propertyRouter.get('/', getProperties);
+propertyRouter.get('/:id', getProperty);
+
+// Protected review and property management routes
+propertyRouter.post('/:id/review', protect, createPropertyReview);
+propertyRouter.put('/:id', protect, updateProperty);
+propertyRouter.delete('/:id', protect, deleteProperty);
+
+export { propertyRouter };
